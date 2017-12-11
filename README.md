@@ -1,5 +1,4 @@
-# TCLtools
-Сollection of TCL scripts for Cisco IOS penetration testing
+# TCLtools — Сollection of TCL scripts for Cisco IOS penetration testing
 
 What software is featured?
 ---------------------------
@@ -87,7 +86,8 @@ Remarks for the scripts
 
  * Do not use TCLproxy for TCP/IP port scanning. TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after connection to a filtered port.
  * On older versions of IOS scripts can write the output to the another console. It's an IOS bug.
- * The script should be stopped after the session is broken; script will write something to the console
+ * The script should be stopped after the script will write something to the console when the session is broken
+
 
 The scripts were tested on Cisco 2811 Integrated Services Router, Cisco Catalyst 2960, and Cisco Catalyst 3750-X.
 
