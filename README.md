@@ -1,9 +1,10 @@
-# TCLtools — Сollection of TCL scripts for Cisco IOS penetration testing
+# Сollection of TCL scripts for Cisco IOS penetration testing
+TCLtools — Сollection of TCL scripts for Cisco IOS penetration testing
 
 What software is featured?
 ---------------------------
 
- * TCLproxy — Proxy server implementation
+ * TCLproxy — Proxy server implementation
 
 TCLproxy
 --------
@@ -31,6 +32,7 @@ Proxy server implementation.
   -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!
   -h, --help                   Show this help message and exit.
   -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!
+  -l, --low-ports              Use privileged source ports (they will be incremented from 1 to 1023 consistently)
   -n, --disable-dns            Never do DNS resolution with -D
 
    example:
@@ -99,3 +101,4 @@ Contact Us
 ==========
 
 You can Open a New Issue to report a bug or suggest a new feature. Or you can drop a few lines at mohemiv@gmail.com.
+

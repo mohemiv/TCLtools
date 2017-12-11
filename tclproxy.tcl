@@ -25,6 +25,7 @@ proc help {} {
     puts "  -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!"
     puts "  -h, --help                   Show this help message and exit."
     puts "  -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!"
+    puts "  -l, --low-ports              Use privileged source ports (they will be incremented from 1 to 1023 consistently)"
     puts "  -n, --disable-dns            Never do DNS resolution with -D"
     puts ""
     puts "   example:"
@@ -61,7 +62,7 @@ set D_disable_dns FALSE
 set D_option_list [list]
 
 set upgrade_the_speed 0
-
+set low_ports 0
 
 # Debug implementation
 
@@ -77,6 +78,28 @@ proc debug {str} {
 
 proc bgerror {error} {
     catch {debug $error}
+}
+
+# Functions for -r, --root-ports             Use privileged source ports
+
+# /**
+#  * The function generates numbers between 1 and 1023 consistently
+#  *
+#  * @return The number between 1 and 1023
+#  */
+
+set source_port_inc 0
+
+proc generate_source_port {} {
+    global source_port_inc
+
+    incr source_port_inc
+
+    if {$source_port_inc >= 1024} {
+        set source_port_inc 1
+    }
+
+    return $source_port_inc
 }
 
 # Functions for parsing command-line options
@@ -266,6 +289,8 @@ for {set i 0} {$i < $argc} {incr i} {
         set DEBUG 0
     } elseif {$arg == "-f" || $arg == "--upgrade-the-speed"} {
         set upgrade_the_speed 1
+    } elseif {$arg == "-r" || $arg == "--low-ports"} {
+        set low_ports 1
     } elseif {$arg == "-n" || $arg == "--disable-dns" } {
         set D_disable_dns TRUE
     } else {
@@ -327,9 +352,23 @@ proc read_chan_from_a_to_b_2 {a b} {
 proc forward_port_handler {transmiss_chain_args debug chan_client client_addr client_port} {
     global default_fconfigure_options
     global upgrade_the_speed
+    global low_ports
 
-    set debug_str "$client_addr:$client_port => $debug"
+    if {$low_ports == 1} {
+         set source_port [generate_source_port]
+	 set source_port_debug "sp $source_port "
+
+         set transmiss_chain_args [linsert $transmiss_chain_args 0 -myport $source_port]
+    } else {
+        set source_port_debug ""
+    }
+
+    set debug_str "$client_addr:$client_port $source_port_debug=> $debug"
     debug "TCP $debug_str"
+
+
+
+
 
     if {[catch {set chan_remote_host [eval socket $transmiss_chain_args]} error]} {
          debug "$error for connect to remote address ($debug)"
@@ -407,6 +446,7 @@ proc dynamic_forward_port_handler {transmiss_chain_args debug chan_client client
     global D_disable_dns
     global default_fconfigure_options
     global upgrade_the_speed
+    global low_ports
 
     set protocol_error "Client $client_addr:$client_port: protocol mismatch"
     set socks4_error "Error while reading SOCKS4 header (connection from $client_addr:$client_port). "
@@ -465,7 +505,16 @@ proc dynamic_forward_port_handler {transmiss_chain_args debug chan_client client
                 set remote_host [ip_c4_to_text $ip]
             }
 
-            debug "TCP $client_addr:$client_port => $protocol $debug => $remote_host:$remote_port"
+            if {$low_ports == 1} {
+                 set source_port [generate_source_port]
+		 set source_port_debug "sp $source_port "
+
+                 lappend transmiss_chain_args -myport $source_port
+            } else {
+		 set source_port_debug " "
+            }
+
+            debug "TCP $client_addr:$client_port => $protocol $debug $source_port_debug=> $remote_host:$remote_port"
 
             if {[catch {set chan_remote_host [eval socket $transmiss_chain_args $remote_host $remote_port]} error]} {
                 debug "TCP $client_addr:$client_port => $debug => $remote_host:$remote_port: $error"
