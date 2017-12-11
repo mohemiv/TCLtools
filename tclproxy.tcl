@@ -3,7 +3,7 @@
 # Help implementation
 
 proc help {} {
-    puts "TCLproxy v0.0.1"
+    puts "TCLproxy v0.0.2"
     puts ""
     puts "Usage: tclsh $::argv0 \[-L address]... \[-D address]..."
 
@@ -270,21 +270,6 @@ for {set i 0} {$i < $argc} {incr i} {
     } elseif {$arg == "-h" || $arg == "--help"} {
         help
         return
-    } elseif {$arg == "-d" || $arg == "--drop-port"} {
-        incr i
-
-        if {$argc == $i} {
-            puts "option requires an argument -- $arg"
-            return
-        }
-
-        set K_drop_port_options [parse_D_option [lindex $argv $i]]
-        set K_drop_port_forced TRUE
-
-        if {$K_drop_port_options == ""} {
-            puts "Bad -d option specification '[lindex $argv $i]'"
-            return
-        }
     } elseif {$arg == "-q" || $arg == "--disable-output"} {
         set DEBUG 0
     } elseif {$arg == "-f" || $arg == "--upgrade-the-speed"} {
