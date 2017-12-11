@@ -10,34 +10,38 @@ TCLproxy
 TCLproxy can be used to create SOCKS4a proxy server or forward a remote port to a local port.
 
 ```
-cisco# tclsh tclproxy.tcl
 TCLproxy v0.0.1
 
-Usage: tclsh tclproxy.tcl [-D address]... [-L address]...
+Usage: tclsh ./tclproxy.tcl [-L address]... [-D address]...
 
 Proxy server implementation.
-
-  -D [bind_address:]port
-    The script will create a SOCKS4a proxy.
 
   -L [bind_address:]port:remote_host:remote_port
     The script will forward a remote port to a local port.
     Multiple connections and multiple forwarding are supported.
 
+  -D [bind_address:]port
+    The script will create a SOCKS4a proxy.
+
  You can also use forwarding between some VRF tables if it is possible on this hardware:
-    -D [VFR_server_table@][bind_address]:port[@VFR_clients_table]
-    -L [VFR_server_table@][bind_address]:port[@VFR_clients_table]:remote_host:remote_port
+    -D [VRF_server_table@][bind_address]:port[@VRF_clients_table]
+    -L [VRF_server_table@][bind_address]:port[@VRF_clients_table]:remote_host:remote_port
 
   optional arguments:
   -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!
-  -h, --help                   Show this help message and exit
+  -h, --help                   Show this help message and exit.
   -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!
   -n, --disable-dns            Never do DNS resolution with -D
 
    example:
     $ sudo py3tftp -p 69
+    cisco# configure terminal
+    cisco(config)# scripting tcl low-memory 5242880
+    cisco(config)# end
     cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
+    cisco# tclsh tclproxy.tcl -h
     cisco# tclsh tclproxy.tcl -L 59001:10.0.0.1:445 -D 59000
+    ...
     cisco# del flash:/tclproxy.tcl
 ```
 
