@@ -25,7 +25,7 @@ proc help {} {
     puts "  -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!"
     puts "  -h, --help                   Show this help message and exit."
     puts "  -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!"
-    puts "  -l, --low-ports              Use privileged source ports (they will be incremented from 1 to 1023 consistently)"
+    puts "  -l, --low-ports              Use privileged source ports, for NFS (they will be incremented from 1 to 1023 consistently)"
     puts "  -n, --disable-dns            Never do DNS resolution with -D"
     puts ""
     puts "   example:"
@@ -33,12 +33,14 @@ proc help {} {
     puts "    cisco# configure terminal"
     puts "    cisco(config)# scripting tcl low-memory 5242880"
     puts "    cisco(config)# end"
-    puts "    cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/" ;# copy tftp://192.168.88.100/tclproxy.tcl flash:/
+    puts "    cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/"
     puts "    cisco# tclsh tclproxy.tcl -h"
-    puts "    cisco# tclsh tclproxy.tcl -L 59001:10.0.0.1:445 -D 59000"
+    puts "    cisco# tclsh tclproxy.tcl -L 5901:10.0.0.1:445 -L :5902@enterpriseVRF -D 5900"
     puts "    ..."
     puts "    cisco# del flash:/tclproxy.tcl"
 }
+
+set argc [llength $argv]
 
 if {$argc == 0} {
     help
@@ -78,28 +80,6 @@ proc debug {str} {
 
 proc bgerror {error} {
     catch {debug $error}
-}
-
-# Functions for -r, --root-ports             Use privileged source ports
-
-# /**
-#  * The function generates numbers between 1 and 1023 consistently
-#  *
-#  * @return The number between 1 and 1023
-#  */
-
-set source_port_inc 0
-
-proc generate_source_port {} {
-    global source_port_inc
-
-    incr source_port_inc
-
-    if {$source_port_inc >= 1024} {
-        set source_port_inc 1
-    }
-
-    return $source_port_inc
 }
 
 # Functions for parsing command-line options
@@ -199,10 +179,10 @@ proc parse_D_option {str} {
 #  * @param str String to parse
 #  *
 #  * @return [list
-#					/* Options for binding to some port on the local host */
-#					/* Options for new chains for remote hosts*/\
-#					/* A string to debug */
-#			 ]
+#                    /* Options for binding to some port on the local host */
+#                    /* Options for new chains for remote hosts*/\
+#                    /* A string to debug */
+#             ]
 #  */
 
 proc parse_L_option {str} {
@@ -284,6 +264,28 @@ for {set i 0} {$i < $argc} {incr i} {
     }
 }
 
+# Functions for -l, --low-ports
+
+# /**
+#  * The function generates numbers between 1 and 1023 consistently
+#  *
+#  * @return The number between 1 and 1023
+#  */
+
+set source_port_inc 0
+
+proc generate_source_port {} {
+    global source_port_inc
+
+    incr source_port_inc
+
+    if {$source_port_inc >= 1024} {
+        set source_port_inc 1
+    }
+
+    return $source_port_inc
+}
+
 # Port forwarding
 
 # /**
@@ -324,7 +326,7 @@ proc read_chan_from_a_to_b_2 {a b} {
 
 # /**
 #  * Handler for client connections (-L option)
-#  * The arguments сan be formed through "parse_D_option" or "parse_L_option" functions and a fileevent
+#  * The arguments can be formed through "parse_D_option" or "parse_L_option" functions and a fileevent
 #  *
 #  * @param transmiss_chain_args
 #  * @param debug
@@ -341,7 +343,7 @@ proc forward_port_handler {transmiss_chain_args debug chan_client client_addr cl
 
     if {$low_ports == 1} {
          set source_port [generate_source_port]
-	 set source_port_debug "sp $source_port "
+     set source_port_debug "sp $source_port "
 
          set transmiss_chain_args [linsert $transmiss_chain_args 0 -myport $source_port]
     } else {
@@ -376,7 +378,7 @@ proc forward_port_handler {transmiss_chain_args debug chan_client client_addr cl
 
 # /**
 #  * Listen a local port and forward any connections to a remote port
-#  * The arguments сan be formed through "parse_D_option" or "parse_L_option" functions
+#  * The arguments can be formed through "parse_D_option" or "parse_L_option" functions
 #  *
 #  * @param recept_chain_args
 #  * @param transmiss_chain_args
@@ -417,7 +419,7 @@ proc ip_c4_to_text {ip} {
 
 # /**
 #  * Handler for client CONNECTIONS (-D option)
-#  * The arguments сan be formed through "parse_D_option" or "parse_L_option" functions and a fileevent
+#  * The arguments can be formed through "parse_D_option" or "parse_L_option" functions and a fileevent
 #  *
 #  * @param transmiss_chain_args
 #  * @param debug
@@ -492,11 +494,11 @@ proc dynamic_forward_port_handler {transmiss_chain_args debug chan_client client
 
             if {$low_ports == 1} {
                  set source_port [generate_source_port]
-		 set source_port_debug "sp $source_port "
+                 set source_port_debug "sp $source_port "
 
                  lappend transmiss_chain_args -myport $source_port
             } else {
-		 set source_port_debug " "
+                set source_port_debug " "
             }
 
             debug "TCP $client_addr:$client_port => $protocol $debug $source_port_debug=> $remote_host:$remote_port"
@@ -537,7 +539,7 @@ proc dynamic_forward_port_handler {transmiss_chain_args debug chan_client client
 
 # /**
 #  * Create SOCKS on a local port
-#  * The arguments сan be formed through "parse_D_option" or "parse_L_option" functions
+#  * The arguments can be formed through "parse_D_option" or "parse_L_option" functions
 #  *
 #  * @param recept_chain_args
 #  * @param transmiss_chain_args

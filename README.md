@@ -37,7 +37,7 @@ Proxy server implementation.
   -n, --disable-dns            Never do DNS resolution with -D
 
    example:
-    $ sudo py3tftp -p 69
+    $ sudo py3tftp -p 69 / sudo python2 -m pyftpdlib -p 21
     cisco# configure terminal
     cisco(config)# scripting tcl low-memory 5242880
     cisco(config)# end
@@ -66,13 +66,45 @@ There are differences between different versions of IOS, but it's possible to wr
 
 How to execute the scripts?
 ===========================
-For executing the script you have to obtain privilege level 15 on the hardware. You can use command copy and upload the scripts on the hardware by FTP or TFTP:
+For executing the script you have to obtain privilege level 15 on the hardware.
+
+There are 4 methods to run the scripts:
+
+1. Use command copy:
 
 ```
 cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
 cisco# copy ftp://192.168.1.10/tclproxy.tcl flash:/
+cisco# tclsh tclproxy.tcl
 ```
-or you can use tclsh for create a file: https://www.cisco.com/c/en/us/support/docs/ip/telnet/116214-technote-technology-00.html
+
+2. Use tclsh for create a file:
+
+```
+$ cat tclproxy.tcl | sed -E 's/([{}$\[])/\\\1/g'
+cisco# tclsh
+cisco(tcl)# puts [open "flash:tclproxy.tcl" w+] {
+cisco(tcl)# ; Copy and paste the file contents into the field.
+cisco(tcl)# }
+cisco(tcl)# exit
+cisco#
+cisco# tclsh tclproxy.tcl
+```
+
+3. Redefine $argv in top of the script and copy one to a tclsh:
+
+```
+set argv [list -D 1080]
+```
+
+4. Use "scripting tcl init" command:
+
+```
+cisco# configure terminal
+cisco(config)# scripting tcl init ftp://192.168.1.10/tclproxy.tcl
+cisco(config)# end
+cisco# tclsh
+```
 
 Good practice is setting limit to the minimum size of free memory:
 
@@ -92,12 +124,12 @@ cisco# show processes mem | i Tcl
 Remarks for the scripts
 =======================
 
- * Do not use TCLproxy for TCP/IP port scanning. TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after connection to a filtered port.
+ * Do not use TCLproxy for TCP/IP port scanning. TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after any connection to a filtered port.
  * On older versions of IOS scripts can write the output to the another console. It's an IOS bug.
  * The script should be stopped after the script will write something to the console when the session is broken
 
 
-The scripts were tested on Cisco 2811 Integrated Services Router, Cisco Catalyst 2960, and Cisco Catalyst 3750-X.
+The scripts were tested on Cisco 2811 / Cisco 2821 Integrated Services Router, Cisco Catalyst 2960, and Cisco Catalyst 3750-X.
 
 Contact Us
 ==========
