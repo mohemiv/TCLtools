@@ -33,17 +33,17 @@ Proxy server implementation.
   -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!
   -h, --help                   Show this help message and exit.
   -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!
-  -l, --low-ports              Use privileged source ports (they will be incremented from 1 to 1023 consistently)
+  -l, --low-ports              Use privileged source ports, for NFS (they will be incremented from 1 to 1023 consistently)
   -n, --disable-dns            Never do DNS resolution with -D
 
    example:
-    $ sudo py3tftp -p 69 / sudo python2 -m pyftpdlib -p 21
+    $ sudo py3tftp -p 69
     cisco# configure terminal
     cisco(config)# scripting tcl low-memory 5242880
     cisco(config)# end
     cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
     cisco# tclsh tclproxy.tcl -h
-    cisco# tclsh tclproxy.tcl -L 59001:10.0.0.1:445 -D 59000
+    cisco# tclsh tclproxy.tcl -L 5901:10.0.0.1:445 -L :5902@enterpriseVRF -D 5900
     ...
     cisco# del flash:/tclproxy.tcl
 
@@ -124,8 +124,8 @@ cisco# show processes mem | i Tcl
 Remarks for the scripts
 =======================
 
- * Do not use TCLproxy for TCP/IP port scanning. TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after any connection to a filtered port.
- * On older versions of IOS scripts can write the output to the another console. It's an IOS bug.
+ * Do not use TCLproxy for TCP/IP port scanning. Cisco TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after any connection to a filtered port.
+ * On older versions of IOS scripts can write the output to another console. It's an IOS bug.
  * The script should be stopped after the script will write something to the console when the session is broken
 
 
