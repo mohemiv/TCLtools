@@ -78,7 +78,7 @@ cisco# copy ftp://192.168.1.10/tclproxy.tcl flash:/
 cisco# tclsh tclproxy.tcl
 ```
 
-2. Use tclsh for create a file:
+2. Use tclsh to create a file:
 
 ```
 $ cat tclproxy.tcl | sed -E 's/([{}$\[])/\\\1/g'
