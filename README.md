@@ -1,40 +1,45 @@
 Сollection of TCL scripts for Cisco IOS penetration testing
 =======
-TCLtools — Сollection of TCL scripts for Cisco IOS penetration testing
+With TCLproxy you can use any Cisco IOS hardware as a pivoting station. It's easy to set up and use!
 
-What software is featured?
+Features
 ---------------------------
 
+ * TCLmap — Port scanner implementation (nmap)
  * TCLproxy — Proxy server implementation
+
 
 TCLproxy
 --------
-TCLproxy can be used to create SOCKS4a proxy server or forward a remote port to a local port.
+TCLproxy is a tool for pivoting through Cisco devices. It's capable to forward any TCP port or launch a proxy server.
+
 
 ```
-TCLproxy v0.0.2
+TCLproxy v0.0.3
 
 Usage: tclsh ./tclproxy.tcl [-L address]... [-D address]...
 
-Proxy server implementation.
+Proxy server implementation. Binary protocols are supported.
 
   -L [bind_address:]port:remote_host:remote_port
-    The script will forward a remote port to a local port.
-    Multiple connections and multiple forwarding are supported.
+    Forward a remote port to a local port.
+    Multiple connections and multiple forwards are supported.
 
   -D [bind_address:]port
-    The script will create a SOCKS4a proxy.
+    Launch a SOCKS4a proxy server.
 
- You can also use forwarding between some VRF tables if it is possible on this hardware:
-    -D [VRF_server_table@][bind_address]:port[@VRF_clients_table]
-    -L [VRF_server_table@][bind_address]:port[@VRF_clients_table]:remote_host:remote_port
+ Forwarding between VRF tables:
+    -D [VRF_table_for_listening@][bind_address]:port[@VRF_table_for_outbound_connections]
+    -L [VRF_table_for_listening@][bind_address]:port[@VRF_table_for_outbound_connections]:remote_host:remote_port
 
   optional arguments:
-  -f, --upgrade-the-speed      The speed can be increased by 1-15 KB/s, but connections don't close automatically. Dangerous!
+  -f, --disable-eof-check      Speed increases by 1-15 KB/s, but connections don't close automatically. Dangerous!
   -h, --help                   Show this help message and exit.
-  -q, --disable-output         Quite mode. Dangerous, sometimes you can not stop the script after the start!
-  -l, --low-ports              Use privileged source ports, for NFS (they will be incremented from 1 to 1023 consistently)
-  -n, --disable-dns            Never do DNS resolution with -D
+  -q, --disable-output         Quite mode. In this mode, you can disconnect from the console without script termination. Dangerous!
+  -l, --low-ports              Use privileged source ports. Required for NFS (source port increments from 1 to 1023 every connection)
+  -n, --disable-dns            Do not resolve DNS names in SOCKS mode
+
+  The effect of --disable-eof-check and --disable-output options depends on hardware architecture and firmware version.
 
    example:
     $ sudo py3tftp -p 69
@@ -43,7 +48,7 @@ Proxy server implementation.
     cisco(config)# end
     cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
     cisco# tclsh tclproxy.tcl -h
-    cisco# tclsh tclproxy.tcl -L 5901:10.0.0.1:445 -L :5902@enterpriseVRF -D 5900
+    cisco# tclsh tclproxy.tcl -L 5901:10.0.0.1:445 -D :5902@enterpriseVRF -D 5900
     ...
     cisco# del flash:/tclproxy.tcl
 
@@ -51,7 +56,7 @@ Proxy server implementation.
 
 About TCL
 =========
-TCL is a high-level, general-purpose, interpreted, dynamic programming language. Cisco IOS has a realization of 8.3.4 TCL version:
+TCL is a high-level, general-purpose, interpreted, dynamic programming language. Cisco IOS implements TCL 8.3.4:
 
 ```
 cisco# tclsh
@@ -61,16 +66,14 @@ cisco(tcl)# puts $tcl_version
 cisco(tcl)# puts $tcl_patchLevel
 8.3.4
 ```
-There are differences between different versions of IOS, but it's possible to write rather stable software for all IOS version.
 
-
-How to execute the scripts?
+How to use TCLtools?
 ===========================
-For executing the script you have to obtain privilege level 15 on the hardware.
+TCLtools requires privilege level 15 on the hardware.
 
-There are 4 methods to run the scripts:
+There are four methods to upload TCL scripts:
 
-1. Use command copy:
+1. Copy tcl script from ftp or tftp server:
 
 ```
 cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
@@ -78,26 +81,28 @@ cisco# copy ftp://192.168.1.10/tclproxy.tcl flash:/
 cisco# tclsh tclproxy.tcl
 ```
 
-2. Use tclsh to create a file:
+2. Create new file via tclsh:
 
 ```
 $ cat tclproxy.tcl | sed -E 's/([{}$\[])/\\\1/g'
 cisco# tclsh
 cisco(tcl)# puts [open "flash:tclproxy.tcl" w+] {
-cisco(tcl)# ; Copy and paste the file contents into the field.
+cisco(tcl)# ; Copy file contents onto this
 cisco(tcl)# }
 cisco(tcl)# exit
 cisco#
 cisco# tclsh tclproxy.tcl
 ```
 
-3. Redefine $argv in top of the script and copy one to a tclsh:
+3. Set $argv var and put script code into tclsh (non-recommended):
 
 ```
-set argv [list -D 1080]
+cisco# tclsh
+cisco(tcl)# set argv [list -D 1080]
+cisco(tcl)# ; Copy file contents onto this
 ```
 
-4. Use "scripting tcl init" command:
+4. Use "scripting tcl init" command (non-recommended):
 
 ```
 cisco# configure terminal
@@ -106,7 +111,7 @@ cisco(config)# end
 cisco# tclsh
 ```
 
-Good practice is setting limit to the minimum size of free memory:
+A good practice is to set the minimum size of free memory:
 
 ```
 cisco# configure terminal
@@ -114,25 +119,24 @@ cisco(config)# scripting tcl low-memory 5242880
 cisco(config)# end
 ```
 
-There are commands to control current consumption of CPU or MEM of tcl scripts:
+Also you can monitor device performance with the following commands:
 
 ```
 cisco# show processes cpu | i Tcl
 cisco# show processes mem | i Tcl
 ```
 
-Remarks for the scripts
+Remarks
 =======================
 
- * Do not use TCLproxy for TCP/IP port scanning. Cisco TCL doesn't support -async option of socket, and the SOCKS will not work about 30 seconds after any connection to a filtered port.
- * On older versions of IOS scripts can write the output to another console. It's an IOS bug.
- * The script should be stopped after the script will write something to the console when the session is broken
+ * Do not use TCLproxy for TCP/IP port scanning. Because Cisco doesn't implement -async socket option, socks server is interrupted for 30 seconds after every connection to any filtered port.
+ * Outdated IOS versions can redirect TCL output to another console. It's an IOS bug.
+ * If you disconnect from the console, TCL script stops after the next output.
 
 
-The scripts were tested on Cisco 2811 / Cisco 2821 Integrated Services Router, Cisco Catalyst 2960, and Cisco Catalyst 3750-X.
+Tested on Cisco 2811 / Cisco 2821 Integrated Services Router, Cisco Catalyst 2960, and Cisco Catalyst 3750-X.
 
 Contact Us
 ==========
 
-You can Open a New Issue to report a bug or suggest a new feature. Or you can drop a few lines at mohemiv@gmail.com.
-
+You can Open a New Issue to report a bug or suggest a new feature to improve the project. Or you can drop a few lines at mohemiv@gmail.com.
