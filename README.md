@@ -1,6 +1,6 @@
 TCL scripts for Cisco IOS penetration testing
 =======
-With TCLproxy you can use any Cisco IOS hardware as a pivoting station. It's easy to set up and use!
+With TCLtools you can use any Cisco IOS hardware as a pivoting station. It's easy to set up and use!
 
 Features
 ---------------------------
