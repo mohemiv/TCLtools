@@ -67,7 +67,7 @@ cisco(tcl)# puts $tcl_patchLevel
 8.3.4
 ```
 
-How to use TCLtools?
+How to use TCLtools
 ===========================
 TCLtools requires privilege level 15 on the hardware.
 
