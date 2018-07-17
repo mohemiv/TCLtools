@@ -32,11 +32,6 @@ proc help {} {
     puts "  TCLproxy will not work for port scanning, use tclmap.tcl instead."
     puts ""
     puts "   example:"
-    puts "    $ sudo py3tftp -p 69"
-    puts "    cisco# configure terminal"
-    puts "    cisco(config)# scripting tcl low-memory 5242880"
-    puts "    cisco(config)# end"
-    puts "    cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/"
     puts "    cisco# tclsh tclproxy.tcl -h"
     puts "    cisco# tclsh tclproxy.tcl -L 5901:10.0.0.1:445 -D :5902@enterpriseVRF -D 5900"
     puts "    ..."
@@ -412,7 +407,7 @@ proc ip_c4_to_text {ip} {
     set ret [list]
 
     foreach octet $ip {
-        lappend ret [expr {$octet & 0xff}]
+        lappend ret [expr {$octet & 0xFF}]
     }
 
     return [join $ret "."]
@@ -575,3 +570,5 @@ if {$L_option || $D_option} {
         catch {debug "$error"}
      }
 }
+
+return
