@@ -77,9 +77,17 @@ There are four methods to upload TCL scripts:
 1. Copy tcl script from ftp or tftp server:
 
 ```
+$ sudo py3tftp -p 69
+or
+$ python2 -m pyftpdlib 
+
 cisco# copy tftp://192.168.1.10/tclproxy.tcl flash:/
-cisco# copy ftp://192.168.1.10/tclproxy.tcl flash:/
+cisco# copy ftp://192.168.1.10:2121/tclproxy.tcl flash:/
 cisco# tclsh tclproxy.tcl
+
+or
+
+cisco# tclsh ftp://192.168.1.10:2121/tclproxy.tcl
 ```
 
 2. Create new file via tclsh:
