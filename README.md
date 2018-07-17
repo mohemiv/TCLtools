@@ -1,6 +1,6 @@
 TCL scripts for Cisco IOS penetration testing
 =======
-With TCLtools you can use any Cisco IOS hardware as a pivoting station. It's easy to set up and use!
+With TCLtools you can transform any Cisco IOS hardware into a pivoting station. It's easy to set up and use!
 
 Features
 ---------------------------
@@ -40,6 +40,7 @@ Proxy server implementation. Binary protocols are supported.
   -n, --disable-dns            Do not resolve DNS names in SOCKS mode
 
   The effect of --disable-eof-check and --disable-output options depends on hardware architecture and firmware version.
+  TCLproxy will not work for port scanning, use tclmap.tcl instead.
 
    example:
     $ sudo py3tftp -p 69
@@ -119,7 +120,7 @@ cisco(config)# scripting tcl low-memory 5242880
 cisco(config)# end
 ```
 
-Also you can monitor device performance with the following commands:
+In addition to, or instead of, you can view device performance with the following commands:
 
 ```
 cisco# show processes cpu | i Tcl

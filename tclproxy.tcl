@@ -29,6 +29,7 @@ proc help {} {
     puts "  -n, --disable-dns            Do not resolve DNS names in SOCKS mode"
     puts ""
     puts "  The effect of --disable-eof-check and --disable-output options depends on hardware architecture and firmware version."
+    puts "  TCLproxy will not work for port scanning, use tclmap.tcl instead."
     puts ""
     puts "   example:"
     puts "    $ sudo py3tftp -p 69"
